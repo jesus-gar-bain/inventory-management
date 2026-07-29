@@ -1,42 +1,15 @@
 <template>
   <div class="app">
-    <header class="top-nav">
-      <div class="nav-container">
-        <div class="logo">
-          <h1>{{ t('nav.companyName') }}</h1>
-          <span class="subtitle">{{ t('nav.subtitle') }}</span>
-        </div>
-        <nav class="nav-tabs">
-          <router-link to="/" :class="{ active: $route.path === '/' }">
-            {{ t('nav.overview') }}
-          </router-link>
-          <router-link to="/inventory" :class="{ active: $route.path === '/inventory' }">
-            {{ t('nav.inventory') }}
-          </router-link>
-          <router-link to="/orders" :class="{ active: $route.path === '/orders' }">
-            {{ t('nav.orders') }}
-          </router-link>
-          <router-link to="/spending" :class="{ active: $route.path === '/spending' }">
-            {{ t('nav.finance') }}
-          </router-link>
-          <router-link to="/demand" :class="{ active: $route.path === '/demand' }">
-            {{ t('nav.demandForecast') }}
-          </router-link>
-          <router-link to="/reports" :class="{ active: $route.path === '/reports' }">
-            Reports
-          </router-link>
-        </nav>
-        <LanguageSwitcher />
-        <ProfileMenu
-          @show-profile-details="showProfileDetails = true"
-          @show-tasks="showTasks = true"
-        />
-      </div>
-    </header>
-    <FilterBar />
-    <main class="main-content">
-      <router-view />
-    </main>
+    <AppSidebar
+      @show-profile-details="showProfileDetails = true"
+      @show-tasks="showTasks = true"
+    />
+    <div class="app-body" :class="{ 'sidebar-collapsed': collapsed }">
+      <FilterBar />
+      <main class="main-content">
+        <router-view />
+      </main>
+    </div>
 
     <ProfileDetailsModal
       :is-open="showProfileDetails"
@@ -59,24 +32,24 @@ import { ref, onMounted, computed } from 'vue'
 import { api } from './api'
 import { useAuth } from './composables/useAuth'
 import { useI18n } from './composables/useI18n'
+import { useSidebar } from './composables/useSidebar'
 import FilterBar from './components/FilterBar.vue'
-import ProfileMenu from './components/ProfileMenu.vue'
+import AppSidebar from './components/AppSidebar.vue'
 import ProfileDetailsModal from './components/ProfileDetailsModal.vue'
 import TasksModal from './components/TasksModal.vue'
-import LanguageSwitcher from './components/LanguageSwitcher.vue'
 
 export default {
   name: 'App',
   components: {
     FilterBar,
-    ProfileMenu,
+    AppSidebar,
     ProfileDetailsModal,
-    TasksModal,
-    LanguageSwitcher
+    TasksModal
   },
   setup() {
     const { currentUser } = useAuth()
     const { t } = useI18n()
+    const { collapsed } = useSidebar()
     const showProfileDetails = ref(false)
     const showTasks = ref(false)
     const apiTasks = ref([])
@@ -150,6 +123,7 @@ export default {
 
     return {
       t,
+      collapsed,
       showProfileDetails,
       showTasks,
       tasks,
@@ -168,9 +142,57 @@ export default {
   box-sizing: border-box;
 }
 
+:root {
+  /* Surfaces */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-sidebar: #0f172a;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-on-dark: #e2e8f0;
+  --text-on-dark-muted: #94a3b8;
+
+  /* Borders */
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-on-dark: #1e293b;
+
+  /* Accent + status */
+  --accent: #2563eb;
+  --accent-subtle: #eff6ff;
+  --success: #059669;
+  --warning: #ea580c;
+  --danger: #dc2626;
+
+  /* Spacing — 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* Radii + elevation */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.08);
+
+  /* Shell */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 68px;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #f8fafc;
+  background: var(--bg-app);
   color: #1e293b;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -178,116 +200,44 @@ body {
 
 .app {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   min-height: 100vh;
+  background: var(--bg-app);
 }
 
-.top-nav {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nav-container {
-  max-width: 1600px;
-  margin: 0 auto;
+.app-body {
+  flex: 1;
+  min-width: 0; /* REQUIRED: lets wide tables scroll instead of forcing page overflow */
+  margin-left: var(--sidebar-width);
   display: flex;
-  align-items: center;
-  padding: 0 2rem;
-  height: 70px;
+  flex-direction: column;
+  transition: margin-left 0.2s ease;
 }
 
-.nav-container > .nav-tabs {
-  margin-left: auto;
-  margin-right: 1rem;
-}
-
-.nav-container > .language-switcher {
-  margin-right: 1rem;
-}
-
-.logo {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.logo h1 {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.025em;
-}
-
-.subtitle {
-  font-size: 0.813rem;
-  color: #64748b;
-  font-weight: 400;
-  padding-left: 0.75rem;
-  border-left: 1px solid #e2e8f0;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.nav-tabs a {
-  padding: 0.625rem 1.25rem;
-  color: #64748b;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.938rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.nav-tabs a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
-}
-
-.nav-tabs a.active {
-  color: #2563eb;
-  background: #eff6ff;
-}
-
-.nav-tabs a.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #2563eb;
+.app-body.sidebar-collapsed {
+  margin-left: var(--sidebar-width-collapsed);
 }
 
 .main-content {
   flex: 1;
-  max-width: 1600px;
   width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: var(--space-5) var(--space-6);
 }
 
 .page-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
 
 .page-header h2 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 0.375rem;
   letter-spacing: -0.025em;
 }
 
 .page-header p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.938rem;
 }
 
@@ -295,24 +245,24 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-surface);
   padding: 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .stat-label {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -323,31 +273,31 @@ body {
 .stat-value {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.025em;
 }
 
 .stat-card.warning .stat-value {
-  color: #ea580c;
+  color: var(--warning);
 }
 
 .stat-card.success .stat-value {
-  color: #059669;
+  color: var(--success);
 }
 
 .stat-card.danger .stat-value {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .stat-card.info .stat-value {
-  color: #2563eb;
+  color: var(--accent);
 }
 
 .card {
-  background: white;
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
   padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   margin-bottom: 1.25rem;
 }
 
@@ -355,15 +305,15 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   padding-bottom: 0.875rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .card-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.025em;
 }
 
@@ -377,14 +327,14 @@ table {
 }
 
 thead {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-app);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 th {
   text-align: left;
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   font-weight: 600;
   color: #475569;
   font-size: 0.75rem;
@@ -393,9 +343,9 @@ th {
 }
 
 td {
-  padding: 0.5rem 0.75rem;
-  border-top: 1px solid #f1f5f9;
-  color: #334155;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--bg-subtle);
+  color: var(--text-body);
   font-size: 0.875rem;
 }
 
@@ -404,13 +354,13 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-app);
 }
 
 .badge {
   display: inline-block;
   padding: 0.313rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -469,8 +419,8 @@ tbody tr:hover {
 
 .loading {
   text-align: center;
-  padding: 3rem;
-  color: #64748b;
+  padding: var(--space-8);
+  color: var(--text-muted);
   font-size: 0.938rem;
 }
 
@@ -478,9 +428,9 @@ tbody tr:hover {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
-  padding: 1rem;
+  padding: var(--space-4);
   border-radius: 8px;
-  margin: 1rem 0;
+  margin: var(--space-4) 0;
   font-size: 0.938rem;
 }
 </style>

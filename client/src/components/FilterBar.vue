@@ -102,54 +102,73 @@ export default {
 
 <style scoped>
 .filters-bar {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0.75rem 0;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) 0;
   position: sticky;
-  top: 70px;
+  top: 0;
   z-index: 90;
 }
 
 .filters-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 var(--space-6);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
+  /* Let the row wrap as a whole so the reset button drops beneath the
+     filters instead of being pushed past the viewport edge. */
+  flex-wrap: wrap;
 }
 
 .filters-grid {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  /* Wrap filter groups onto additional rows in narrow content regions
+     instead of forcing the row wider than its container. */
+  flex-wrap: wrap;
+  gap: var(--space-4);
   flex: 1;
+  /* Prevents the flex item from refusing to shrink below the combined
+     min-width of its children (the default flex-basis is "auto",
+     which uses content size as a floor). */
+  min-width: 0;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  /* Allow groups to shrink and wrap gracefully; basis gives each group
+     a comfortable target width while still fitting ~750px in 2 rows. */
+  flex: 1 1 160px;
+  /* Same reasoning as .filters-grid: without this a flex child with a
+     select inside cannot shrink smaller than the select's intrinsic
+     width, which is what caused the horizontal overflow. */
+  min-width: 0;
 }
 
 .filter-group label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .filter-select {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  padding: 0.4rem var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   font-size: 0.813rem;
-  color: #0f172a;
-  background: white;
+  color: var(--text-primary);
+  background: var(--bg-surface);
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
-  min-width: 140px;
+  /* Small min-width keeps the select legible while still allowing the
+     .filter-group flex-basis (160px) to be the real shrink limit, so
+     four groups can fit a ~750px content region without overflowing. */
+  min-width: 90px;
+  width: 100%;
 }
 
 .filter-select:hover {
@@ -158,8 +177,8 @@ export default {
 
 .filter-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .reset-filters-btn {
@@ -167,19 +186,22 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 0.4rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #64748b;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
+  /* Keeps the button pinned to the far right of .filters-container even
+     when .filters-grid wraps onto multiple rows above it. */
+  margin-left: auto;
 }
 
 .reset-filters-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .reset-filters-btn:disabled {
